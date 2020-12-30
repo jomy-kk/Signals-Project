@@ -7,11 +7,13 @@ PSSI - Project Group B3
 Timer t;
 
 const float sampling_frequency = 400; // Hz
-const int analog_pin = 0; // pin number to be sampled
+const int analog_pin_a = 0; // first pin number to be sampled
+const int analog_pin_b = 5; // second pin number to be sampled
 
 void setup() {
   Serial.begin(9600);
-  pinMode(analog_pin, INPUT);
+  pinMode(analog_pin_a, INPUT);
+  pinMode(analog_pin_b, INPUT);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
   t.oscillate(LED_BUILTIN, 500, HIGH);
@@ -25,5 +27,11 @@ void loop() {
 }
 
 void acquire() {
-  Serial.println(analogRead(analog_pin));
+  Serial.print(analog_pin_a);
+  Serial.print(":");
+  Serial.print(analogRead(analog_pin_a));
+  Serial.print(";");
+  Serial.print(analog_pin_b);
+  Serial.print(":");
+  Serial.println(analogRead(analog_pin_b));
 }
