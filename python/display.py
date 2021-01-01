@@ -61,6 +61,10 @@ def e2_multi_channel_subplots(signalA, signalB, labelA, labelB, duration, fileTo
 
     plt.show()
 
+def ef_save_to_csv(signal, fileToSave, verbose=False):
+    signal_array = np.array(signal)
+    signal_array.tofile(fileToSave + '.csv', sep=',')
+    if verbose: print("Saved signal in csv file to", fileToSave)
 
 # Test
 with open("../pickle/AL1_mock.pickle", 'rb') as AL1:
@@ -71,6 +75,6 @@ with open("../pickle/AL4_mock.pickle", 'rb') as AL4:
     signal_al4 = pickle.load(AL4)
     AL4.close()
 
-e2_multi_channel_subplots(signal_al1, signal_al4, 'AL1', 'AL4', 12, 'ExB - E2(A0, A5)', verbose=True)
+#e2_multi_channel_subplots(signal_al1, signal_al4, 'AL1', 'AL4', 12, 'ExB - E2(A0, A5)', verbose=True)
 
-
+ef_save_to_csv(signal_al1, 'teste', True)
