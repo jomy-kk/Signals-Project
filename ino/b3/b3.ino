@@ -27,11 +27,13 @@ void loop() {
 }
 
 void acquire() {
-  Serial.print(analog_pin_a);
+  String samples = String(analog_pin_a) + ':' + String(analogRead(analog_pin_a)) + ';' + String(analog_pin_b) + ':' + String(analogRead(analog_pin_b));
+  Serial.println(samples);
+  /*Serial.print(analog_pin_a);
   Serial.print(":");
   Serial.print(analogRead(analog_pin_a));
   Serial.print(";");
   Serial.print(analog_pin_b);
   Serial.print(":");
-  Serial.println(analogRead(analog_pin_b));
+  Serial.println(analogRead(analog_pin_b));*/
 }

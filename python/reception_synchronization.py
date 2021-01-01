@@ -9,27 +9,48 @@ import pickle, numpy as np
 from datetime import datetime
 import tkinter as tk
 
-def ca1_receive_fixed_duration(duration, fileToSave=None, verbose=False):
+def ca1_receive_fixed_duration(duration, sampling_frequency, fileToSave=None, verbose=False):
     ser, res, volt = setup_arduino_communication()
     if verbose: print("Arduino communication open successfully")
 
-    ser.write(str(duration).encode())
-    arduinoData = ser.readline().decode().split('\r')
-    if verbose:
-        print("Data collected")
+    n_samples = duration*sampling_frequency
+    data_a = np.array([])
+    data_b = np.array([])
 
-    arduinoData = [float(i)*volt/res for i in arduinoData[:-1]]
+    ser.reset_input_buffer()
+    received = ser.readline().decode().split('\r\n')[0]
+    a, b = received.split(';')
+    label_a, label_b = a.split(':')[0], b.split(':')[0]
+    if verbose: print("Started sampling...")
+
+    while n_samples > 0:
+        values = ser.readline().decode().split('\r\n')
+        a, b = values[0].split(';')
+        data_a = np.append(data_a, a.split(':')[1])
+        data_b = np.append(data_b, b.split(':')[1])
+        n_samples -= 1
+
+    if verbose: print("Data collected: ", duration, "seconds.")
+
+    data_a = [float(i)*volt/res for i in data_a]
+    data_b = [float(i)*volt/res for i in data_b]
     if verbose:
         print("Data converted")
-        print(arduinoData)
-        print(len(arduinoData), "samples")
+        #print(data_a)
+        print('From pin', label_a + ':', len(data_a), "samples")
+        #print(data_b)
+        print('From pin', label_b + ':', len(data_b), "samples")
 
     if fileToSave is not None:
         try:
-            with open('../pickle/' + fileToSave + ' ' + str(datetime.now()) + '.pickle', 'wb') as output:
-                pickle.dump(arduinoData, output, protocol=pickle.HIGHEST_PROTOCOL)
+            with open('../pickle/' + fileToSave + ' pin' + label_a + ' ' + str(datetime.now()) + '.pickle', 'wb') as output:
+                pickle.dump(data_a, output, protocol=pickle.HIGHEST_PROTOCOL)
                 output.close()
-                if verbose: print("Signal saved in 'pickle'.")
+            with open('../pickle/' + fileToSave + ' pin' + label_b + ' ' + str(datetime.now()) + '.pickle', 'wb') as output:
+                pickle.dump(data_b, output, protocol=pickle.HIGHEST_PROTOCOL)
+                output.close()
+
+            if verbose: print("Signals saved in 'pickle'.")
 
         except IOError:
             print ("Error: File path provided does not seem to exist.")
@@ -209,9 +230,9 @@ def cs_simulate_signal(duration, sampling_frequency, fileToSave=None, verbose=Fa
 
 
 # Test
-#ca1_receive_fixed_duration(30, 'AL5 arb', verbose=True)
+ca1_receive_fixed_duration(1, 400, 'teste', verbose=True)
 
 #duration = 6 # seconds
 #res = cs_simulate_signal(duration, 6400, 'CS', verbose=True)
 
-ca2_receive_free_duration(400, 'test', verbose=True)
+#ca2_receive_free_duration(400, 'test', verbose=True)
