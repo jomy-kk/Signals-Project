@@ -6,8 +6,9 @@ PSSI - Project Group B3
 #include "Timer.h"
 Timer t;
 
-const float sampling_frequency = 200; // Hz
-const int analog_pin = 0; // pin number to be sampled
+const int analog_pin = 5; // pin number to be sampled
+int led_id;
+bool led_blinking = false;
 
 void setup() {
   Serial.begin(9600);
@@ -17,30 +18,23 @@ void setup() {
 }
 
 void loop() {
+  t.update();
   if(Serial.available() > 0) {
     int command = Serial.parseInt();
     switch(command) {
       case 0: { // stop acquisition
+        if (led_blinking == true) {
+          t.stop(led_id);
+          led_blinking = false;
+        }
         break;
       }
       case 1: { // start acquisition
-        digitalWrite(LED_BUILTIN, HIGH);
+        if (led_blinking == false) {
+            led_id = t.oscillate(LED_BUILTIN, 500, HIGH);
+            led_blinking = true;
+          }
         Serial.println(analogRead(analog_pin));
-        digitalWrite(LED_BUILTIN, LOW);
-        break;
-      }
-      default: { // acquire for the recieved duration */
-        int led = t.oscillate(LED_BUILTIN, 500, HIGH);
-        float duration = command * 1000; // ms
-        float interval = 1/sampling_frequency*1000; // ms
-        while (duration > 0) {
-          Serial.print(String(analogRead(analog_pin)) + '\r');
-          duration = duration - interval;
-          delay(interval);
-          t.update();
-        }
-        Serial.print('\n');
-        t.stop(led);
         digitalWrite(LED_BUILTIN, LOW);
         break;
       }
