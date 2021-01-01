@@ -73,3 +73,4 @@ with open("../pickle/AL4_mock.pickle", 'rb') as AL4:
 
 e2_multi_channel_subplots(signal_al1, signal_al4, 'AL1', 'AL4', 12, 'ExB - E2(A0, A5)', verbose=True)
 
+
