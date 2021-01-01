@@ -7,6 +7,7 @@ PSSI - Project Group B3
 from python.setup import setup_arduino_communication
 import pickle, numpy as np
 from datetime import datetime
+import tkinter as tk
 
 def ca1_receive_fixed_duration(duration, fileToSave=None, verbose=False):
     ser, res, volt = setup_arduino_communication()
@@ -35,6 +36,77 @@ def ca1_receive_fixed_duration(duration, fileToSave=None, verbose=False):
 
     ser.close()
     if verbose: print("Arduino communication closed")
+
+def ca2_receive_free_duration(sampling_frequency, fileToSave=None, verbose=False):
+    global cond, data, fs, vb
+    cond = False
+    data = np.array([])
+    fs, vb = int(sampling_frequency), verbose
+
+
+    ser, res, volt = setup_arduino_communication()
+    ser.reset_input_buffer()
+    if verbose: print("Arduino communication open successfully")
+
+    def acquire_stop():
+        global cond, data
+        cond = False
+        ser.write('0'.encode())
+        if verbose: print("Data collected")
+
+        data = [float(i) * volt / res for i in data]
+        if verbose:
+            print("Data converted")
+            print(len(data), "samples")
+
+        if fileToSave is not None:
+            try:
+                with open('../pickle/' + fileToSave + ' ' + str(datetime.now()) + '.pickle', 'wb') as output:
+                    pickle.dump(data, output, protocol=pickle.HIGHEST_PROTOCOL)
+                    output.close()
+                    data.clear()
+                    if verbose: print("Signal saved in 'pickle'.")
+
+            except IOError:
+                print("Error: File path provided does not seem to exist.")
+
+    def acquire_start():
+        global cond
+        cond = True
+        root.after(1, get_data)
+
+    def get_data():
+        global cond, data, fs, vb
+        if cond == True:
+            if vb: print("Sampling...")
+            ser.write('1'.encode())
+            val = ser.readline().decode().split('\r\n')
+            data = np.append(data, val[0])
+            root.after(int(1/fs*1000), get_data)
+
+    def quit():
+        ser.close()
+        if verbose: print("Arduino communication closed")
+        root.quit()
+
+    root = tk.Tk()
+    frame = tk.Frame(root)
+    frame.pack()
+    root.title("PSSI - Group B3 - Acquire analog signal")
+
+    start_button = tk.Button(frame, text="Start Acquisition", command=lambda: acquire_start())
+    start_button.pack(side=tk.LEFT)
+
+    stop_button = tk.Button(frame, text="Stop Acquisition", command=lambda: acquire_stop())
+    stop_button.pack(side=tk.LEFT)
+
+    quit_button = tk.Button(frame, text="Quit", fg="red", command=lambda: quit())
+    quit_button.pack(side=tk.RIGHT)
+
+    root.mainloop()
+    root.after(1, acquire_start)
+
+    return data
 
 
 def cs_simulate_signal(duration, sampling_frequency, fileToSave=None, verbose=False):
@@ -67,6 +139,7 @@ def cs_simulate_signal(duration, sampling_frequency, fileToSave=None, verbose=Fa
 
         except IOError:
             print ("Error: File path provided does not seem to exist.")
+
 
     '''
     fig = plt.figure()
@@ -134,9 +207,11 @@ def cs_simulate_signal(duration, sampling_frequency, fileToSave=None, verbose=Fa
     return signal
 
 
+
 # Test
 #ca1_receive_fixed_duration(30, 'AL5 arb', verbose=True)
 
-duration = 6 # seconds
-import matplotlib.pyplot as plt
-res = cs_simulate_signal(duration, 6400, 'CS', verbose=True)
+#duration = 6 # seconds
+#res = cs_simulate_signal(duration, 6400, 'CS', verbose=True)
+
+ca2_receive_free_duration(400, 'test', verbose=True)
