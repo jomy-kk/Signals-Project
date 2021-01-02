@@ -2,28 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy import arange
 from scipy.io import wavfile
-from scipy.signal import freqz, lfilter, ellip, ellipord, cheb1ord, cheby1
+from scipy.signal import freqz, lfilter, ellip, ellipord, cheb1ord, cheby1,iirdesign,lfilter
 
-def DI_BD_IIRchebyI(wav_file_path, plot_interval, verbose=False):
-    def mfreqz(b,a=1):
-
-        w,h = signal.freqz(b,a)
-        h_dB = 20 * np.log10 (np.abs(h))
-
-        subplot(2,1,1)
-        plot(w/max(w),h_dB)
-        ylim(-150, 5)
-        ylabel('Magnitude (db)')
-        xlabel(r'Normalized Frequency (x$\pi$rad/sample)')
-        title(r'Frequency response')
-        subplot(212)
-        h_Phase = np.unwrap(np.arctan2(np.imag(h), np.real(h)))
-        plot(w/np.max(w),h_Phase)
-        ylabel('Phase (radians)')
-        xlabel(r'Normalized Frequency (x$\pi$rad/sample)')
-        title(r'Phase response')
-        subplots_adjust(hspace=0.5)
-        plt.show()
+def DI_BR_IIRchebyI(signal, plot_interval, quality, cut_off_frequency, verbose=False):
     # ------------------------------------------------
     # Create a signal.
     # ------------------------------------------------
@@ -35,18 +16,10 @@ def DI_BD_IIRchebyI(wav_file_path, plot_interval, verbose=False):
     # ------------------------------------------------
     # Create a IIR filter and apply it to x.
     # ------------------------------------------------
-
-    N, Wn = cheb1ord(ws=[0.55, 0.65], wp= [0.5, 0.7], gstop=60, gpass=1)
+    #bandwidth=cut_off_frequency/quality
+    N, Wn = cheb1ord(ws=[], wp= [0.5, 0.7], gstop=60, gpass=1)
     b, a = cheby1(N, 1, Wn, btype='bandstop')
     w, h = freqz(b, a, fs=200000)
-
-    # passband from 0.05 to 0.3 times the Nyquist frequency with 60 dbstop band and 1 dbpassband attenuation
-    b,a= signal.iirdesign(wp = [0.5, 0.7], ws= [0.55, 0.65], gstop= 60, gpass=1, ftype='ellip')
-    # %% bandpass frequency responsem
-    freqz(b, a)
-    # %% Impulse
-    responseimpz(b, a)
-
 
     fig = plt.figure()
     h_dB = 20 * np.log10(np.abs(h))
@@ -55,11 +28,12 @@ def DI_BD_IIRchebyI(wav_file_path, plot_interval, verbose=False):
     plt.ylabel('Magnitude (dB)')
     plt.xlabel('Frequency (Hz)')
     plt.grid(True)
-    fig.savefig('DI.png', bbox_inches='tight')
+    fig.savefig('results_a6/chebyI_frequency_response.png', bbox_inches='tight')
 
 
     # Apply filtfilt to signal
     filtered_x = lfilter(b, a, x)
+    wavfile.write('looneytunes_IIR_BR_55-65K.filtered_wav', samplerate, filtered_x)
 
     fig = plt.figure()
     # Plot the original signal.
@@ -79,7 +53,14 @@ def DI_BD_IIRchebyI(wav_file_path, plot_interval, verbose=False):
     plt.xlabel('Time (s)')
     plt.grid(True)
     plt.subplots_adjust(hspace=0.7)
-    fig.savefig('DI.png', bbox_inches='tight')
+    fig.savefig('results_a6/chebyI_filtered_output.png', bbox_inches='tight')
 
     if verbose:
         plt.show()
+
+duration = 4 * 1000 # ms
+intervals = 1/2*1000 # ms
+samples = np.linspace(0, duration, int(intervals*duration), endpoint=False)
+signal1 = np.cos(2 * np.pi * 800 * samples)
+
+DI_BR_IIRchebyI(signal1, (0,4), 40, 1600, verbose=False)
