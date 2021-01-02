@@ -14,11 +14,9 @@ def DI_BR_IIRchebyI(signal, plot_interval, verbose=False):
     t = arange(nsamples) / samplerate
 
     # Values and constants for the purpose of the C part of the project
-    quality = 40
     cut_off_frequency=1600 # Hz
     Atenuation=60
-    bandwidth=cut_off_frequency/quality
-    
+
 
     # ------------------------------------------------
     # Create a IIR filter and apply it to x.
