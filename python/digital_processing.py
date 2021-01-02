@@ -3,13 +3,16 @@ import numpy as np
 from numpy import arange
 from scipy.io import wavfile
 from scipy.signal import freqz, lfilter, ellip, ellipord, cheb1ord, cheby1,iirdesign,lfilter
+import csv
 
-def DI_BR_IIRchebyI(signal, plot_interval, verbose=False):
+def DI_BR_IIRchebyI(cvs_file_path, plot_interval, verbose=False):
     # ------------------------------------------------
     # Create a signal.
     # ------------------------------------------------
 
-    samplerate, x = wavfile.read(wav_file_path)
+    #Missing the call of the signals - I don't know if the file is csv
+    with open('Signalnames.csv', 'r') as file:
+        samplerate, x = = csv.reader(file)
     nsamples = x.size
     t = arange(nsamples) / samplerate
 
@@ -62,9 +65,9 @@ def DI_BR_IIRchebyI(signal, plot_interval, verbose=False):
     if verbose:
         plt.show()
 
+
 duration = 4 * 1000 # ms
 intervals = 1/2*1000 # ms
 samples = np.linspace(0, duration, int(intervals*duration), endpoint=False)
 signal1 = np.cos(2 * np.pi * 800 * samples)
-
-DI_BR_IIRchebyI(signal1, (0,4), 40, 1600, verbose=False)
+DI_BR_IIRchebyI(signal1, (0,4), verbose=False)
