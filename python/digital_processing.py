@@ -4,7 +4,7 @@ from numpy import arange
 from scipy.io import wavfile
 from scipy.signal import freqz, lfilter, ellip, ellipord, cheb1ord, cheby1,iirdesign,lfilter
 
-def DI_BR_IIRchebyI(signal, plot_interval, quality, cut_off_frequency, verbose=False):
+def DI_BR_IIRchebyI(signal, plot_interval, verbose=False):
     # ------------------------------------------------
     # Create a signal.
     # ------------------------------------------------
@@ -13,11 +13,17 @@ def DI_BR_IIRchebyI(signal, plot_interval, quality, cut_off_frequency, verbose=F
     nsamples = x.size
     t = arange(nsamples) / samplerate
 
+    # Values and constants for the purpose of the C part of the project
+    quality = 40
+    cut_off_frequency=1600 # Hz
+    Atenuation=60
+    bandwidth=cut_off_frequency/quality
+    
+
     # ------------------------------------------------
     # Create a IIR filter and apply it to x.
     # ------------------------------------------------
-    #bandwidth=cut_off_frequency/quality
-    N, Wn = cheb1ord(ws=[], wp= [0.5, 0.7], gstop=60, gpass=1)
+    N, Wn = cheb1ord(ws=[], wp= [0.5, 0.7], gstop=atenuation, gpass=1)
     b, a = cheby1(N, 1, Wn, btype='bandstop')
     w, h = freqz(b, a, fs=200000)
 
