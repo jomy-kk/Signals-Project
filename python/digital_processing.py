@@ -2,17 +2,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy import arange
 from scipy.io import wavfile
-from scipy.signal import freqz, lfilter, ellip, ellipord, cheb1ord, cheby1,iirdesign,lfilter
+from scipy.signal import freqz, lfilter, ellip, ellipord, cheb1ord, cheby1,iirdesign,lfilter, resample
 import csv
 
-def DI_BR_IIRchebyI(cvs_file_path, plot_interval, verbose=False):
+def DI_BR_IIRchebyI(cs_file, plot_interval, verbose=False):
     # ------------------------------------------------
     # Create a signal.
     # ------------------------------------------------
 
-    #Missing the call of the signals - I don't know if the file is csv
-    with open('Signalnames.csv', 'r') as file:
-        samplerate, x = = csv.reader(file)
+    #Opening the pickle file
+    with open("caminho para CS......", "rb") as input_file:
+         signal = cPickle.load(input_file)
     nsamples = x.size
     t = arange(nsamples) / samplerate
 
@@ -65,9 +65,8 @@ def DI_BR_IIRchebyI(cvs_file_path, plot_interval, verbose=False):
     if verbose:
         plt.show()
 
-
-duration = 4 * 1000 # ms
-intervals = 1/2*1000 # ms
-samples = np.linspace(0, duration, int(intervals*duration), endpoint=False)
-signal1 = np.cos(2 * np.pi * 800 * samples)
 DI_BR_IIRchebyI(signal1, (0,4), verbose=False)
+
+
+def DR_uniformresample(pickle_file_path, plot_interval, verbose=False):
+    resample(cvs_file_path, 6, t=None, axis=0, window=None, domain='time')
