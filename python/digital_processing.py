@@ -1,55 +1,126 @@
+# -*- coding: utf-8 -*-
+"""
+PSSI - Project Group B3
+@authors: João Saraiva, Tiago Mimoso
+"""
+
+from matplotlib import ticker
 import matplotlib.pyplot as plt
-import numpy as np
-from numpy import arange
-from scipy.io import wavfile
-from scipy.signal import freqz, lfilter, ellip, ellipord, cheb1ord, cheby1,iirdesign,lfilter, resample
-import csv
+import pickle, numpy as np
+from datetime import datetime
+from scipy.signal import iirdesign, filtfilt, resample, freqz, impulse, medfilt
 
-def DI_BR_IIRchebyI(file_name, plot_interval, verbose=False):
-    # --------------------------------------------------
-    # Opening the pickle file
-    # --------------------------------------------------
-    with open("../"+ file_name + ".pickle", "rb") as input_file:
-         signal = cPickle.load(input_file)
-         input_file.close()
+def DI_IIRfilter_BR(signal, f1, f2, sampling_frequency, gstop, fileToSave=None, verbose=False):
 
-    # --------------------------------------------------
-    # Calculating parameters to use in the filter
-    # --------------------------------------------------
-    nsamples = len(signal)
-    time =   #time of the signal aquisition to then use to calculate the sample rate
-    samplerate = len(signal)/time
-    t = arange(nsamples) / samplerate
+    nyquist_frequency = sampling_frequency/2
+    f1_coeff, f2_coeff = f1/nyquist_frequency, f2/nyquist_frequency
 
-    # Values and constants for the purpose of the C part of the project
-    cut_off_frequency=1600 # Hz
-    atenuation=60
+    # Design bandreject from f1_coeff to f2_coeff times the Nyquist frequency with gstop dB stop band and 1 dB passband attenuation
+    b, a = iirdesign(wp=[f1_coeff-0.05, f2_coeff+0.05], ws=[f1_coeff, f2_coeff], gstop=gstop, gpass=1, ftype='ellip')
+    if verbose: print("Filter designed")
+
+    # Frequency response
+    if fileToSave is not None:
+        w, h = freqz(b, a)
+
+        fig, ax1 = plt.subplots()
+        ax1.set_title('Digital filter frequency response')
+        ax1.plot(w, 20 * np.log10(abs(h)), 'b')
+        ax1.set_ylabel('Amplitude [dB]', color='b')
+        ax1.set_xlabel('Frequency [rad/sample]')
+        ax1.grid()
+        ax2 = ax1.twinx()
+        angles = np.unwrap(np.angle(h))
+        ax2.plot(w, angles, 'g')
+        ax2.set_ylabel('Angle (radians)', color='g')
+        ax2.grid()
+        ax2.axis('tight')
+        nticks = 8
+        ax1.yaxis.set_major_locator(ticker.LinearLocator(nticks))
+        ax2.yaxis.set_major_locator(ticker.LinearLocator(nticks))
+
+        plt.show()
+        fig.savefig('../plots/' + fileToSave + '_frequency_response.png', bbox_inches='tight')
+        if verbose:
+            print("Frequency Response saved in 'plots'.")
+
+    # Impulse response
+    if fileToSave is not None:
+        t, yout = impulse((b, a))
+        fig = plt.figure()
+        plt.stem(t, yout)
+        plt.xlabel('Samples')
+        plt.ylabel('Amplitude')
+        plt.show()
+        fig.savefig('../plots/' + fileToSave + '_impulse_response.png', bbox_inches='tight')
+        if verbose:
+            print("Impulse Response saved in 'plots'.")
+
+    # Apply filter
+    filtered_signal = filtfilt(b, a, signal)
+    if verbose: print("Filter applied forward and backward to the signal.")
+
+    if fileToSave is not None:
+        try:
+            with open('../pickle/' + fileToSave + ' ' + str(datetime.now()) + '.pickle', 'wb') as output:
+                pickle.dump(filtered_signal, output, protocol=pickle.HIGHEST_PROTOCOL)
+                output.close()
+                if verbose: print("Filtered signal saved in 'pickle'.")
+
+        except IOError:
+            print("Error: File path provided does not seem to exist.")
+
+    return filtered_signal
 
 
-    # ------------------------------------------------
-    # Create a IIR filter to apply it to x.
-    # ------------------------------------------------
-    N, Wn = cheb1ord(ws=[], wp= [0.5, 0.7], gstop=atenuation, gpass=1)
-    b, a = cheby1(N, 1, Wn, btype='bandstop')
-    w, h = freqz(b, a)
 
-    h_dB = 20 * np.log10(np.abs(h)) # Log scale to use in the frequency response
-    # -----------------------------------------------
-    #  Apply the filter to the signal from the input file
-    #-----------------------------------------------
+def DR_uniform_resample(signal, duration, num_samples_to_resample, fileToSave=None, verbose=False):
 
-    filtered_signal = lfilter(b, a, signal)
+    t = np.linspace(0, duration, len(signal), endpoint=False)
+    resampled_signal = resample(signal, num_samples_to_resample)
+    resampled_t = np.linspace(0, duration, num_samples_to_resample, endpoint=False)
 
-    return [w,h_dB,filtered_signal]
+    fig = plt.figure(figsize=(16,8))
+    plt.plot(t, signal, 'b.-', resampled_t, resampled_signal, 'go-', mfc='none')
+    plt.xlim((0,0.3))
+    plt.legend(['original', 'resampled'], loc='best')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Amplitude (V)')
+    plt.show()
+    fig.savefig('../plots/ExA - DR.png', bbox_inches='tight')
+
+    if fileToSave is not None:
+        try:
+            with open('../pickle/' + fileToSave + ' ' + str(datetime.now()) + '.pickle', 'wb') as output:
+                pickle.dump(resampled_signal, output, protocol=pickle.HIGHEST_PROTOCOL)
+                output.close()
+                if verbose: print("Filtered signal saved in 'pickle'.")
+
+        except IOError:
+            print("Error: File path provided does not seem to exist.")
+
+    return resampled_signal
 
 
-def DR_uniformresample(file_name, plot_interval, verbose=False):
+# Test Topic A
 
-    with open("../"+ file_name + ".pickle", "rb") as uniform:
-         signal = cPickle.load(uniform)
-         uniform.close()
+'''
+with open("../pickle/AL6_mock.pickle", "rb") as file:
+    signal = pickle.load(file)
+    file.close()
+filtered_signal = DR_uniform_resample(signal, 12, 4*len(signal), fileToSave='ExA - DR', verbose=True)
 
-    filtered_signal=resample(cvs_file_path, 3)
+from python.display import ef_save_to_csv
+ef_save_to_csv(filtered_signal, fileToSave='ExA - EF', verbose=True)
+'''
 
 
-    return (filtered_signal)
+# Test Topic C
+
+with open("../pickle/CS 2021-01-03 12:21:04.113930.pickle", "rb") as file:
+    signal = pickle.load(file)
+    file.close()
+filtered_signal = DI_IIRfilter_BR(signal, f1=1593, f2=1608, sampling_frequency=6400, gstop=60, fileToSave='ExC - DI', verbose=True)
+
+from python.display import e2_multi_channel_subplots
+e2_multi_channel_subplots(signal, filtered_signal, 'Original', 'Filtered', 6, fileToSave='ExC - E2', verbose=True)
