@@ -6,7 +6,7 @@ PSSI - Project Group B3
 #include "Timer.h"
 Timer t;
 
-const float sampling_frequency = 400; // Hz
+const float sampling_frequency = 320; // Hz
 const int analog_pin_a = 0; // first pin number to be sampled
 const int analog_pin_b = 5; // second pin number to be sampled
 
