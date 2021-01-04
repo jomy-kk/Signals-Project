@@ -8,6 +8,7 @@ from python.setup import setup_arduino_communication
 import pickle, numpy as np
 from datetime import datetime
 import tkinter as tk
+import time as T
 
 def ca1_receive_fixed_duration(duration, sampling_frequency, fileToSave=None, verbose=False):
     ser, res, volt = setup_arduino_communication()
@@ -59,10 +60,11 @@ def ca1_receive_fixed_duration(duration, sampling_frequency, fileToSave=None, ve
     if verbose: print("Arduino communication closed")
 
 def ca2_receive_free_duration(sampling_frequency, fileToSave=None, verbose=False):
-    global cond, data, fs, vb
+    global cond, data, time, fs, vb, file
     cond = False
     data = np.array([])
-    fs, vb = int(sampling_frequency), verbose
+    time = np.array([])
+    fs, vb, file = int(sampling_frequency), verbose, fileToSave
 
 
     ser, res, volt = setup_arduino_communication()
@@ -70,20 +72,22 @@ def ca2_receive_free_duration(sampling_frequency, fileToSave=None, verbose=False
     if verbose: print("Arduino communication open successfully")
 
     def acquire_stop():
-        global cond, data, fs, vb
+        global cond, data, time, fs, vb, file
         cond = False
         ser.write('0'.encode())
         if verbose: print("Data collected")
 
-        data = [float(i) * volt / res for i in data]
+        data = [float(i) * volt / res for i in data] # volts
+        initial_time = float(time[0])
+        time = [(float(t) - initial_time)/1000 for t in time] # seconds
         if vb:
             print("Data converted")
             print(len(data), "samples")
 
-        if fs is not None:
+        if file is not None:
             try:
-                with open('../pickle/' + fileToSave + ' ' + str(datetime.now()) + '.pickle', 'wb') as output:
-                    pickle.dump(data, output, protocol=pickle.HIGHEST_PROTOCOL)
+                with open('../pickle/' + file + ' ' + str(datetime.now()) + '.pickle', 'wb') as output:
+                    pickle.dump([time, data], output, protocol=pickle.HIGHEST_PROTOCOL)
                     output.close()
                     data.clear()
                     if vb: print("Signal saved in 'pickle'.")
@@ -91,19 +95,46 @@ def ca2_receive_free_duration(sampling_frequency, fileToSave=None, verbose=False
             except IOError:
                 print("Error: File path provided does not seem to exist.")
 
+        '''
+        from matplotlib import pyplot as plt
+        fig = plt.figure()
+        plt.plot(time, data, 'b-', linewidth=0.5)
+        plt.xlabel('Time (s)')
+        plt.xlim((1, 2))
+        plt.ylabel('Amplitude (V)')
+
+        fig.savefig('../plots/AL6.png', bbox_inches='tight')
+        if verbose:
+            print("Image saved in 'plots'.")
+
+        plt.show()
+        '''
+
+
     def acquire_start():
         global cond
         cond = True
-        root.after(1, get_data)
+        ser.write('1'.encode())
+        root.after(1000, get_data)
+
+    global nsamples
+    nsamples = 0
 
     def get_data():
-        global cond, data, fs, vb
+        global cond, data, time, fs, vb, nsamples
         if cond == True:
             if vb: print("Sampling...")
-            ser.write('1'.encode())
-            val = ser.readline().decode().split('\r\n')
-            data = np.append(data, val[0])
-            root.after(int(1/fs*1000), get_data)
+            received = ser.readline().decode().split('\r\n')[0]
+            received = received.split(':')
+            t = received[0]
+            val = received[1]
+            time = np.append(time, t)
+            data = np.append(data, val)
+            nsamples = nsamples + 1
+            if nsamples == 4800:
+                cond = False
+                acquire_stop()
+            root.after(1, get_data)
 
     def quit():
         ser.close()
@@ -127,7 +158,7 @@ def ca2_receive_free_duration(sampling_frequency, fileToSave=None, verbose=False
     root.mainloop()
     root.after(1, acquire_start)
 
-    return data
+    return time, data
 
 
 def cs_simulate_signal(duration, sampling_frequency, fileToSave=None, verbose=False):
@@ -231,9 +262,9 @@ def cs_simulate_signal(duration, sampling_frequency, fileToSave=None, verbose=Fa
 
 
 # Test
-#ca1_receive_fixed_duration(1, 400, 'teste', verbose=True)
+#ca1_receive_fixed_duration(1, 400, verbose=True)
 
-duration = 6 # seconds
-res = cs_simulate_signal(duration, 6400, 'CS', verbose=True)
+#duration = 6 # seconds
+#res = cs_simulate_signal(duration, 6400, 'CS', verbose=True)
 
-#ca2_receive_free_duration(400, 'test', verbose=True)
+ca2_receive_free_duration(400, 'AL6', verbose=True)

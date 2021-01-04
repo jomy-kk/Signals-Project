@@ -74,14 +74,15 @@ def DI_IIRfilter_BR(signal, f1, f2, sampling_frequency, gstop, fileToSave=None, 
 
 
 
-def DR_uniform_resample(signal, duration, num_samples_to_resample, fileToSave=None, verbose=False):
+def DR_uniform_resample(signal, sampling_times, resampling_duration, resampling_frequency, fileToSave=None, verbose=False):
 
-    t = np.linspace(0, duration, len(signal), endpoint=False)
-    resampled_signal = resample(signal, num_samples_to_resample)
-    resampled_t = np.linspace(0, duration, num_samples_to_resample, endpoint=False)
+    resampling_num_samples = int(resampling_duration*resampling_frequency)
+    uniform_times = np.linspace(0, resampling_duration, resampling_num_samples, endpoint=False)
+    resampled_signal, resampled_times = resample(signal, num=resampling_num_samples, t=uniform_times)
 
     fig = plt.figure(figsize=(16,8))
-    plt.plot(t, signal, 'b.-', resampled_t, resampled_signal, 'go-', mfc='none')
+    plt.plot(sampling_times, signal, 'b.-')
+    plt.plot(uniform_times, resampled_signal, 'go-', mfc='none')
     plt.xlim((0,0.3))
     plt.legend(['original', 'resampled'], loc='best')
     plt.xlabel('Time (s)')
@@ -104,19 +105,22 @@ def DR_uniform_resample(signal, duration, num_samples_to_resample, fileToSave=No
 
 # Test Topic A
 
-'''
-with open("../pickle/AL6_mock.pickle", "rb") as file:
-    signal = pickle.load(file)
+
+with open("../pickle/AL6_with_sampling_times 2021-01-04 14:24:32.487008.pickle", "rb") as file:
+    obj = pickle.load(file)
+    times = obj[0]
+    signal = obj[1]
     file.close()
-filtered_signal = DR_uniform_resample(signal, 12, 4*len(signal), fileToSave='ExA - DR', verbose=True)
+
+filtered_signal = DR_uniform_resample(signal, times, 12, 400, fileToSave='ExA - DR', verbose=True)
 
 from python.display import ef_save_to_csv
 ef_save_to_csv(filtered_signal, fileToSave='ExA - EF', verbose=True)
-'''
+
 
 
 # Test Topic C
-
+'''
 with open("../pickle/CS 2021-01-03 12:21:04.113930.pickle", "rb") as file:
     signal = pickle.load(file)
     file.close()
@@ -124,3 +128,4 @@ filtered_signal = DI_IIRfilter_BR(signal, f1=1593, f2=1608, sampling_frequency=6
 
 from python.display import e2_multi_channel_subplots
 e2_multi_channel_subplots(signal, filtered_signal, 'Original', 'Filtered', 6, fileToSave='ExC - E2', verbose=True)
+'''
