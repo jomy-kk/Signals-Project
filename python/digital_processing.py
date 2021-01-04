@@ -105,7 +105,7 @@ def DR_uniform_resample(signal, sampling_times, resampling_duration, resampling_
 
 # Test Topic A
 
-
+'''
 with open("../pickle/AL6_with_sampling_times 2021-01-04 14:24:32.487008.pickle", "rb") as file:
     obj = pickle.load(file)
     times = obj[0]
@@ -116,11 +116,11 @@ resampled_times, resampled_signal = DR_uniform_resample(signal, times, 12, 400, 
 
 from python.display import ef_save_to_csv
 ef_save_to_csv(resampled_signal, resampled_times, fileToSave='ExA - EF', verbose=True)
-
+'''
 
 
 # Test Topic C
-'''
+
 with open("../pickle/CS 2021-01-03 12:21:04.113930.pickle", "rb") as file:
     signal = pickle.load(file)
     file.close()
@@ -128,4 +128,3 @@ filtered_signal = DI_IIRfilter_BR(signal, f1=1593, f2=1608, sampling_frequency=6
 
 from python.display import e2_multi_channel_subplots
 e2_multi_channel_subplots(signal, filtered_signal, 'Original', 'Filtered', 6, fileToSave='ExC - E2', verbose=True)
-'''
