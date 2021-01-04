@@ -13,7 +13,7 @@ bool led_blinking = false;
 volatile int acquire = 0;
 
 void setup() {
-  Serial.begin(38400);
+  Serial.begin(19200);
   pinMode(analog_pin, INPUT);
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
