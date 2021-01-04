@@ -100,7 +100,7 @@ def DR_uniform_resample(signal, sampling_times, resampling_duration, resampling_
         except IOError:
             print("Error: File path provided does not seem to exist.")
 
-    return resampled_signal
+    return resampled_times, resampled_signal
 
 
 # Test Topic A
@@ -112,10 +112,10 @@ with open("../pickle/AL6_with_sampling_times 2021-01-04 14:24:32.487008.pickle",
     signal = obj[1]
     file.close()
 
-filtered_signal = DR_uniform_resample(signal, times, 12, 400, fileToSave='ExA - DR', verbose=True)
+resampled_times, resampled_signal = DR_uniform_resample(signal, times, 12, 400, fileToSave='ExA - DR', verbose=True)
 
 from python.display import ef_save_to_csv
-ef_save_to_csv(filtered_signal, fileToSave='ExA - EF', verbose=True)
+ef_save_to_csv(resampled_signal, resampled_times, fileToSave='ExA - EF', verbose=True)
 
 
 

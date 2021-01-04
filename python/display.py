@@ -63,9 +63,12 @@ def e2_multi_channel_subplots(signalA, signalB, labelA, labelB, duration, fileTo
 
     plt.show()
 
-def ef_save_to_csv(signal, fileToSave, verbose=False):
-    signal_array = np.array(signal)
-    signal_array.tofile(fileToSave + '.csv', sep=',')
+def ef_save_to_csv(signal, times, fileToSave, verbose=False):
+    time_points     = np.array(times) # one column for time points
+    sample_points   = np.array(signal) # one column for sample points
+    array = np.column_stack((time_points, sample_points))
+    print(array)
+    np.savetxt(fileToSave + '.csv', array, delimiter=",")
     if verbose: print("Saved signal in csv file to", fileToSave)
 
 # Test

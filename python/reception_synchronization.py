@@ -59,12 +59,12 @@ def ca1_receive_fixed_duration(duration, sampling_frequency, fileToSave=None, ve
     ser.close()
     if verbose: print("Arduino communication closed")
 
-def ca2_receive_free_duration(sampling_frequency, fileToSave=None, verbose=False):
+def ca2_receive_free_duration(fileToSave=None, verbose=False):
     global cond, data, time, fs, vb, file
     cond = False
     data = np.array([])
     time = np.array([])
-    fs, vb, file = int(sampling_frequency), verbose, fileToSave
+    vb, file = verbose, fileToSave
 
 
     ser, res, volt = setup_arduino_communication()
