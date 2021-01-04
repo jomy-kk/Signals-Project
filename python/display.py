@@ -8,9 +8,25 @@ import pickle, numpy as np
 import matplotlib.pyplot as plt
 
 def e2_multi_channel_subplots(signalA, signalB, labelA, labelB, duration, fileToSave=None, verbose=False):
+    '''
+    Receives two signals, one label for each and plots them both in separated subplots for the specified duration.
+    It also plots a preview of 0.02 seconds.
+
+    :param signalA: First signal to plot.
+    :param signalB: Second signal to plot.
+    :param labelA: Label of signalA.
+    :param labelB: Label of signalB.
+    :param duration: The duration for which you want to plot the signals.
+
+    :param fileToSave: If given, it stores the plots as png in that path inside 'plots'.
+    :param verbose: If given, the function log is printed on the terminal.
+
+    :return: (None)
+    '''
     if verbose:
         print("Plotting both signals...")
 
+    # Plot preview
     fig = plt.figure(figsize=(16,8))
 
     plt.subplot(2,1,1)
@@ -37,6 +53,7 @@ def e2_multi_channel_subplots(signalA, signalB, labelA, labelB, duration, fileTo
 
     plt.show()
 
+    # Plot full duration
     fig = plt.figure(figsize=(16,8))
 
     plt.subplot(2, 1, 1)
@@ -63,7 +80,21 @@ def e2_multi_channel_subplots(signalA, signalB, labelA, labelB, duration, fileTo
 
     plt.show()
 
+
 def ef_save_to_csv(signal, times, fileToSave, verbose=False):
+    '''
+    Receives a signal samples vector and a their time points vector
+    and saves them one in each column in a csv file.
+
+    :param signal: The signal amplitude samples.
+    :param times:  The signal time points.
+    :param fileToSave: The path to save the csv file. (No need to add .csv)
+
+    :param verbose: If given, the function log is printed on the terminal.
+
+    :return: (None)
+    '''
+
     time_points     = np.array(times) # one column for time points
     sample_points   = np.array(signal) # one column for sample points
     array = np.column_stack((time_points, sample_points))

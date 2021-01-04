@@ -11,8 +11,29 @@ from datetime import datetime
 from scipy.signal import iirdesign, filtfilt, resample, freqz, impulse, medfilt
 
 def DI_IIRfilter_BR(signal, f1, f2, sampling_frequency, gstop, fileToSave=None, verbose=False):
+    '''
+    Designs an IIR band-reject Cauer/elliptic filter, with a stop-bandwidth of [f1, f2].
+    Plots the frequency response and impulse response.
+    Applies the filter to the given signal and plots the filtered output.
 
+    :param signal: The signal to be filtered
+    :param f1: The lower cutoff frequency (in Hertz).
+    :param f2: The higher cutoff frequency (in Hertz).
+    :param sampling_frequency: The sampling frequency at which the signal was acquired (in Hertz).
+    :param gstop: The minimum attenuation in the stop-band (in dB).
+
+    :param fileToSave: If given, it stores the filtered signal as pickle object in that path inside 'pickle',
+                       and the images as png in that path inside 'plots'.
+    :param verbose: If given, the function log is printed on the terminal.
+
+    :return: filtered_signal
+             The filtered signal after the filter was applied to the original.
+    '''
+
+    # Computes Nyquist frequency
     nyquist_frequency = sampling_frequency/2
+
+    # Computes cutoff frequencies coefficients, normalized from 0 to 1, where 1 is the Nyquist frequency.
     f1_coeff, f2_coeff = f1/nyquist_frequency, f2/nyquist_frequency
 
     # Design bandreject from f1_coeff to f2_coeff times the Nyquist frequency with gstop dB stop band and 1 dB passband attenuation
@@ -60,6 +81,7 @@ def DI_IIRfilter_BR(signal, f1, f2, sampling_frequency, gstop, fileToSave=None, 
     filtered_signal = filtfilt(b, a, signal)
     if verbose: print("Filter applied forward and backward to the signal.")
 
+    # Save filtered signal if 'fileToSave' was given
     if fileToSave is not None:
         try:
             with open('../pickle/' + fileToSave + ' ' + str(datetime.now()) + '.pickle', 'wb') as output:
@@ -75,11 +97,30 @@ def DI_IIRfilter_BR(signal, f1, f2, sampling_frequency, gstop, fileToSave=None, 
 
 
 def DR_uniform_resample(signal, sampling_times, resampling_duration, resampling_frequency, fileToSave=None, verbose=False):
+    '''
+    Performs a uniform resample on the given simple.
+    It also plots a preview of the resampled result against the original signal.
 
+    :param signal: The original signal to be resampled.
+    :param sampling_times:  The original time points at which the signal was sampled.
+    :param resampling_duration: The duration the resampled signal should have (in seconds).
+    :param resampling_frequency: The sampling frequency the resampled signal should have (in Hertz).
+
+    :param fileToSave: If given, it stores the resampled signal as pickle object in that path inside 'pickle'.
+    :param verbose: If given, the function log is printed on the terminal.
+
+    :return: resampled_times, resampled_signal
+             The resampled time points and the resampled signal on those time points.
+    '''
+
+    # Prepare number of samples and time points
     resampling_num_samples = int(resampling_duration*resampling_frequency)
     uniform_times = np.linspace(0, resampling_duration, resampling_num_samples, endpoint=False)
+
+    # Do resampling
     resampled_signal, resampled_times = resample(signal, num=resampling_num_samples, t=uniform_times)
 
+    # Plot result
     fig = plt.figure(figsize=(16,8))
     plt.plot(sampling_times, signal, 'b.-')
     plt.plot(uniform_times, resampled_signal, 'go-', mfc='none')
@@ -90,6 +131,7 @@ def DR_uniform_resample(signal, sampling_times, resampling_duration, resampling_
     plt.show()
     fig.savefig('../plots/ExA - DR.png', bbox_inches='tight')
 
+    # Save resampled signal if 'fileToSave' was given
     if fileToSave is not None:
         try:
             with open('../pickle/' + fileToSave + ' ' + str(datetime.now()) + '.pickle', 'wb') as output:
